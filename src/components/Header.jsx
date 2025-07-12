@@ -1,14 +1,17 @@
+import { use } from 'react';
 import { Link, useLocation } from 'react-router-dom'
-
+import { useNavigate } from 'react-router-dom';
 function Header({ isLoggedIn, currentUser, setIsLoggedIn }) {
   const location = useLocation();
+  const navigate = useNavigate();
   
   const handleLogout = () => {
+    localStorage.removeItem('token'); // Clear the stored token
     setIsLoggedIn(false);
   };
 
   const handleLogin = () => {
-    setIsLoggedIn(true);
+    navigate('/login');
   };
   
   return (

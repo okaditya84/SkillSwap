@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import UserCard from '../components/UserCard';
 import LoginPopup from '../components/LoginPopup';
+import { useNavigate } from 'react-router-dom';
 
 function HomePage({ isLoggedIn, setIsLoggedIn }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [availability, setAvailability] = useState('All');
   const [currentPage, setCurrentPage] = useState(1);
   const [showLoginPopup, setShowLoginPopup] = useState(false);
+  const navigate = useNavigate();
 
   const users = [
     {
