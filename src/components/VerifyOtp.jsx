@@ -24,24 +24,36 @@ const VerifyOtp = ({ setIsLoggedIn }) => {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
-            <div className="w-full max-w-md bg-white rounded-xl shadow-lg p-6">
-                <h2 className="text-2xl font-bold text-center text-gray-800 mb-6">Verify OTP</h2>
-                <form onSubmit={handleVerify} className="space-y-4">
-                    <input
-                        type="text"
-                        placeholder="Enter OTP"
-                        value={otp}
-                        onChange={(e) => setOtp(e.target.value)}
-                        className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
-                    />
-                    <button
-                        type="submit"
-                        className="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 rounded-lg transition duration-200"
-                    >
-                        Verify OTP
-                    </button>
-                </form>
+        <div className="min-h-screen flex items-center justify-center px-4">
+            <div className="w-full max-w-md">
+                {/* Glassmorphism container */}
+                <div className="auth-container">
+                    <div className="auth-header">
+                        <h2 className="auth-title">Verify Your Account</h2>
+                        <p className="auth-subtitle">Enter the OTP sent to your email or mobile</p>
+                    </div>
+                    
+                    <form onSubmit={handleVerify} className="auth-form">
+                        <div className="form-group">
+                            <label className="auth-label">OTP Code</label>
+                            <input
+                                type="text"
+                                placeholder="Enter 6-digit OTP"
+                                value={otp}
+                                onChange={(e) => setOtp(e.target.value)}
+                                className="auth-input"
+                                maxLength="6"
+                            />
+                        </div>
+                        
+                        <button
+                            type="submit"
+                            className="auth-btn auth-btn-register"
+                        >
+                            <span>Verify Account</span>
+                        </button>
+                    </form>
+                </div>
             </div>
         </div>
     );
