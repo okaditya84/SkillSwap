@@ -12,36 +12,33 @@ function HomePage({ isLoggedIn, setIsLoggedIn }) {
     {
       id: 1,
       name: 'Marc Demo',
-      avatar:
-        'https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&dpr=1',
+      avatar: 'https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&dpr=1',
       skillsOffered: ['Java Script', 'Python'],
       skillsWanted: ['Database', 'Graphic Designer'],
       rating: 3.9,
+      profileVisibility: 'Public'
     },
     {
       id: 2,
       name: 'Michell',
-      avatar:
-        'https://images.pexels.com/photos/733872/pexels-photo-733872.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&dpr=1',
+      avatar: 'https://images.pexels.com/photos/733872/pexels-photo-733872.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&dpr=1',
       skillsOffered: ['Java Script', 'Python'],
       skillsWanted: ['Database', 'Graphic Designer'],
       rating: 2.5,
+      profileVisibility: 'Private'
     },
     {
       id: 3,
-      name: 'Joe Wills',
-      avatar:
-        'https://images.pexels.com/photos/1681010/pexels-photo-1681010.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&dpr=1',
+      name: 'Joe wills',
+      avatar: 'https://images.pexels.com/photos/1681010/pexels-photo-1681010.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&dpr=1',
       skillsOffered: ['Java Script', 'Python'],
       skillsWanted: ['Database', 'Graphic Designer'],
       rating: 4.0,
-    },
+      profileVisibility: 'Public'
+    }
   ];
 
-  // Configurable items per page
-  const usersPerPage = 4;
-
-  // Calculate how many pages needed
+  const usersPerPage = 3;
   const totalPages = Math.ceil(users.length / usersPerPage);
 
   const handlePageChange = (page) => {
@@ -71,7 +68,6 @@ function HomePage({ isLoggedIn, setIsLoggedIn }) {
     return pages;
   };
 
-  // Slice users for current page
   const paginatedUsers = users.slice(
     (currentPage - 1) * usersPerPage,
     currentPage * usersPerPage
@@ -81,14 +77,12 @@ function HomePage({ isLoggedIn, setIsLoggedIn }) {
     <div className="home-page">
       <div className="page-header">
         <h1>Discover Skills & Connect</h1>
-        <p className="page-subtitle">
-          Find talented people to exchange skills with
-        </p>
+        <p className="page-subtitle">Find talented people to exchange skills with</p>
       </div>
 
       <div className="search-section">
         <div className="search-controls">
-          <select
+          <select 
             className="availability-select"
             value={availability}
             onChange={(e) => setAvailability(e.target.value)}
@@ -98,7 +92,7 @@ function HomePage({ isLoggedIn, setIsLoggedIn }) {
             <option value="Weekends">Weekends</option>
             <option value="Evenings">Evenings</option>
           </select>
-
+          
           <div className="search-input-group">
             <input
               type="text"
@@ -113,10 +107,10 @@ function HomePage({ isLoggedIn, setIsLoggedIn }) {
       </div>
 
       <div className="users-list">
-        {paginatedUsers.map((user) => (
-          <UserCard
-            key={user.id}
-            user={user}
+        {paginatedUsers.map(user => (
+          <UserCard 
+            key={user.id} 
+            user={user} 
             isLoggedIn={isLoggedIn}
             onRequestClick={handleRequestClick}
           />
@@ -142,7 +136,7 @@ function HomePage({ isLoggedIn, setIsLoggedIn }) {
       </div>
 
       {showLoginPopup && (
-        <LoginPopup
+        <LoginPopup 
           onClose={() => setShowLoginPopup(false)}
           onLogin={() => {
             setIsLoggedIn(true);
@@ -151,7 +145,7 @@ function HomePage({ isLoggedIn, setIsLoggedIn }) {
         />
       )}
     </div>
-  );
+  )
 }
 
 export default HomePage;

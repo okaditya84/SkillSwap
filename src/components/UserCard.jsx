@@ -9,8 +9,22 @@ function UserCard({ user, isLoggedIn, onRequestClick }) {
     }
   };
 
+  const handleCardClick = (e) => {
+    // Don't navigate if clicking on the request button
+    if (e.target.closest('.request-btn')) {
+      return;
+    }
+    
+    // Only navigate if profile is public
+    if (user.profileVisibility === 'Public') {
+      window.location.href = `/user/${user.id}`;
+    }
+  };
   return (
-    <div className="user-card">
+    <div 
+      className={`user-card ${user.profileVisibility === 'Public' ? 'clickable' : ''}`}
+      onClick={handleCardClick}
+    >
       <div className="user-avatar">
         <img src={user.avatar} alt={user.name} />
         <div className="avatar-label">Profile Photo</div>
