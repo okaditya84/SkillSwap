@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 
 const RegisterForm = () => {
     const [email, setEmail] = useState('');
+    const [name, setName] = useState('');
     const [mobile, setMobile] = useState('+91');
     const [password, setPassword] = useState('');
     const navigate = useNavigate();
@@ -17,6 +18,7 @@ const RegisterForm = () => {
             const res = await axios.post('https://odoo-begin.onrender.com/api/auth/register', {
                 email: email || undefined,
                 mobile: mobile || undefined,
+                name: name,
                 password,
             });
             alert(res.data.message);
@@ -44,6 +46,15 @@ const RegisterForm = () => {
                                 type="email"
                                 placeholder="Enter your email"
                                 onChange={(e) => setEmail(e.target.value)}
+                                className="auth-input"
+                            />
+                        </div>
+                         <div className="form-group">
+                            <label className="auth-label">Name</label>
+                            <input
+                                type="text"
+                                placeholder="Enter your name"
+                                onChange={(e) => setName(e.target.value)}
                                 className="auth-input"
                             />
                         </div>

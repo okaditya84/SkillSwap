@@ -19,7 +19,7 @@ function HomePage({ isLoggedIn, setIsLoggedIn }) {
       skillsWanted: ['Database', 'Graphic Designer'],
       rating: 3.9,
       profileVisibility: 'Public',
-      requestStatus: null // null for regular users, 'pending' or 'accepted' for requests
+      requestStatus: null
     },
     {
       id: 2,
@@ -45,19 +45,74 @@ function HomePage({ isLoggedIn, setIsLoggedIn }) {
 
   const usersPerPage = 3;
   
-  // Filter users based on availability selection
-  const filteredUsers = users.filter(user => {
-    if (availability === 'All') return user.requestStatus === null;
-    if (availability === 'Pending') return user.requestStatus === 'pending';
-    if (availability === 'Accepted') return user.requestStatus === 'accepted';
-    return true; // For other availability options like Weekdays, Weekends, etc.
-  });
+  // Normalize search term for better matching
+  const normalizeString = (str) => {
+    return str.toLowerCase().trim().replace(/\s+/g, ' ');
+  };
+
+  // Enhanced search function
+  const searchUsers = (users, searchTerm) => {
+    if (!searchTerm.trim()) return users;
+    
+    const normalizedSearch = normalizeString(searchTerm);
+    
+    return users.filter(user => {
+      // Search in name
+      const nameMatch = normalizeString(user.name).includes(normalizedSearch);
+      
+      // Search in skills offered
+      const skillsOfferedMatch = user.skillsOffered.some(skill => 
+        normalizeString(skill).includes(normalizedSearch)
+      );
+      
+      // Search in skills wanted
+      const skillsWantedMatch = user.skillsWanted.some(skill => 
+        normalizeString(skill).includes(normalizedSearch)
+      );
+      
+      return nameMatch || skillsOfferedMatch || skillsWantedMatch;
+    });
+  };
+
+  // Filter users based on availability and search
+  const filteredUsers = (() => {
+    // First filter by availability
+    let availabilityFiltered = users.filter(user => {
+      if (availability === 'All') return user.requestStatus === null;
+      if (availability === 'Pending') return user.requestStatus === 'pending';
+      if (availability === 'Accepted') return user.requestStatus === 'accepted';
+      return true; // For other availability options like Weekdays, Weekends, etc.
+    });
+
+    // Then apply search filter
+    return searchUsers(availabilityFiltered, searchTerm);
+  })();
 
   const totalPages = Math.ceil(filteredUsers.length / usersPerPage);
 
   const handlePageChange = (page) => {
     if (page < 1 || page > totalPages) return;
     setCurrentPage(page);
+  };
+
+  const handleSearch = () => {
+    setCurrentPage(1); // Reset to first page when searching
+  };
+
+  const handleSearchInputChange = (e) => {
+    setSearchTerm(e.target.value);
+    setCurrentPage(1); // Reset to first page when typing
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      handleSearch();
+    }
+  };
+
+  const clearSearch = () => {
+    setSearchTerm('');
+    setCurrentPage(1);
   };
 
   const handleRequestClick = () => {
@@ -67,15 +122,11 @@ function HomePage({ isLoggedIn, setIsLoggedIn }) {
   };
 
   const handleAcceptRequest = (userId) => {
-    // Handle accept request logic here
     console.log(`Accepting request from user ${userId}`);
-    // You would typically make an API call here
   };
 
   const handleRejectRequest = (userId) => {
-    // Handle reject request logic here
     console.log(`Rejecting request from user ${userId}`);
-    // You would typically make an API call here
   };
 
   const renderPagination = () => {
@@ -125,14 +176,31 @@ function HomePage({ isLoggedIn, setIsLoggedIn }) {
             <input
               type="text"
               className="search-input"
-              placeholder="Search skills..."
+              placeholder="Search skills or names..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={handleSearchInputChange}
+              onKeyPress={handleKeyPress}
             />
-            <button className="search-btn">Search</button>
+            <button className="search-btn" onClick={handleSearch}>
+              Search
+            </button>
+            {searchTerm && (
+              <button className="clear-btn" onClick={clearSearch}>
+                Clear
+              </button>
+            )}
           </div>
         </div>
       </div>
+
+      {searchTerm && (
+        <div className="search-results-info">
+          <p>
+            {filteredUsers.length} result{filteredUsers.length !== 1 ? 's' : ''} 
+            found for "{searchTerm}"
+          </p>
+        </div>
+      )}
 
       <div className="users-list">
         {paginatedUsers.map(user => (
@@ -148,7 +216,14 @@ function HomePage({ isLoggedIn, setIsLoggedIn }) {
         ))}
       </div>
 
-      {filteredUsers.length === 0 && (
+      {filteredUsers.length === 0 && searchTerm && (
+        <div className="no-results">
+          <p>No results found for "{searchTerm}".</p>
+          <p>Try searching for different skills or names.</p>
+        </div>
+      )}
+
+      {filteredUsers.length === 0 && !searchTerm && (
         <div className="no-results">
           <p>No {availability.toLowerCase()} requests found.</p>
         </div>
