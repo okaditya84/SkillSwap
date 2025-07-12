@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const User = require('../models/User');
+const User = require('../models/User').User || require('../models/User');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { generateOTP, sendEmailOTP } = require('../utils/sendOtp');
@@ -25,13 +25,19 @@ router.post('/register', async (req, res) => {
         }
     }
 
+    const { name } = req.body;
+    if (!name) {
+        return res.status(400).json({ message: 'Name is required' });
+    }
+
     const hashed = await bcrypt.hash(password, 10);
     const otp = generateOTP();
 
     const user = await User.create({
+        name,
         email,
         mobile,
-        password: hashed,
+        passwordHash: hashed,
         otp,
         otpExpiry: Date.now() + 10 * 60 * 1000,
     });
