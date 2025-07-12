@@ -9,7 +9,6 @@ function DetailedView({ isLoggedIn, setIsLoggedIn }) {
   const [showLoginPopup, setShowLoginPopup] = useState(false)
   const [loading, setLoading] = useState(true)
 
-  // Mock user data - in real app this would come from API
   const users = [
     {
       id: 1,
