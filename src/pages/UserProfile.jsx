@@ -1,16 +1,20 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import SkillTag from '../components/SkillTag'
 
 function UserProfile({ currentUser, setCurrentUser }) {
   const [isEditing, setIsEditing] = useState(false)
+  const fileInputRef = useRef(null)
+
   const [formData, setFormData] = useState({
     name: currentUser.name || 'Current User',
     location: 'San Francisco, CA',
     skillsOffered: ['Graphic Design', 'Video Editing', 'Photoshop'],
     skillsWanted: ['Python', 'Java Script', 'Manager'],
     availability: 'weekends',
-    profileVisibility: 'Public'
+    profileVisibility: 'Public',
+    profilePhoto: currentUser.avatar || '',
   })
+
   const [newSkillOffered, setNewSkillOffered] = useState('')
   const [newSkillWanted, setNewSkillWanted] = useState('')
 
@@ -21,6 +25,21 @@ function UserProfile({ currentUser, setCurrentUser }) {
     }))
   }
 
+  const handlePhotoChange = (e) => {
+    const file = e.target.files[0]
+    if (file) {
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setFormData(prev => ({
+          ...prev,
+          profilePhoto: reader.result
+        }))
+        setIsEditing(true)
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
   const addSkillOffered = () => {
     if (newSkillOffered.trim() && !formData.skillsOffered.includes(newSkillOffered.trim())) {
       setFormData(prev => ({
@@ -28,6 +47,7 @@ function UserProfile({ currentUser, setCurrentUser }) {
         skillsOffered: [...prev.skillsOffered, newSkillOffered.trim()]
       }))
       setNewSkillOffered('')
+      setIsEditing(true)
     }
   }
 
@@ -38,6 +58,7 @@ function UserProfile({ currentUser, setCurrentUser }) {
         skillsWanted: [...prev.skillsWanted, newSkillWanted.trim()]
       }))
       setNewSkillWanted('')
+      setIsEditing(true)
     }
   }
 
@@ -46,6 +67,7 @@ function UserProfile({ currentUser, setCurrentUser }) {
       ...prev,
       skillsOffered: prev.skillsOffered.filter(skill => skill !== skillToRemove)
     }))
+    setIsEditing(true)
   }
 
   const removeSkillWanted = (skillToRemove) => {
@@ -53,12 +75,14 @@ function UserProfile({ currentUser, setCurrentUser }) {
       ...prev,
       skillsWanted: prev.skillsWanted.filter(skill => skill !== skillToRemove)
     }))
+    setIsEditing(true)
   }
 
   const handleSave = () => {
     setCurrentUser(prev => ({
       ...prev,
-      name: formData.name
+      name: formData.name,
+      avatar: formData.profilePhoto
     }))
     setIsEditing(false)
     // Here you would typically save to backend
@@ -71,7 +95,8 @@ function UserProfile({ currentUser, setCurrentUser }) {
       skillsOffered: ['Graphic Design', 'Video Editing', 'Photoshop'],
       skillsWanted: ['Python', 'Java Script', 'Manager'],
       availability: 'weekends',
-      profileVisibility: 'Public'
+      profileVisibility: 'Public',
+      profilePhoto: currentUser.avatar || '',
     })
     setIsEditing(false)
   }
@@ -96,9 +121,27 @@ function UserProfile({ currentUser, setCurrentUser }) {
         
         <div className="profile-photo-section">
           <div className="profile-photo-container">
-            <img src={currentUser.avatar} alt="Profile" className="profile-photo" />
+            <img
+              src={formData.profilePhoto || currentUser.avatar}
+              alt="Profile"
+              className="profile-photo"
+            />
             <div className="profile-photo-label">Profile Photo</div>
-            <button className="edit-photo-btn">Add/Edit Remove</button>
+
+            <input
+              type="file"
+              accept="image/*"
+              style={{ display: 'none' }}
+              ref={fileInputRef}
+              onChange={handlePhotoChange}
+            />
+
+            <button
+              className="edit-photo-btn"
+              onClick={() => fileInputRef.current && fileInputRef.current.click()}
+            >
+              Add/Edit Photo
+            </button>
           </div>
         </div>
       </div>
@@ -144,7 +187,6 @@ function UserProfile({ currentUser, setCurrentUser }) {
                     removable={true}
                     onRemove={() => {
                       removeSkillOffered(skill)
-                      setIsEditing(true)
                     }}
                   />
                 ))}
@@ -159,16 +201,12 @@ function UserProfile({ currentUser, setCurrentUser }) {
                   onKeyPress={(e) => {
                     if (e.key === 'Enter') {
                       addSkillOffered()
-                      setIsEditing(true)
                     }
                   }}
                 />
                 <button 
                   className="add-skill-btn"
-                  onClick={() => {
-                    addSkillOffered()
-                    setIsEditing(true)
-                  }}
+                  onClick={addSkillOffered}
                 >
                   +
                 </button>
@@ -177,7 +215,7 @@ function UserProfile({ currentUser, setCurrentUser }) {
           </div>
 
           <div className="skills-section">
-            <label className="form-label">Skills wanted</label>
+            <label className="form-label">Skills Wanted</label>
             <div className="skills-container">
               <div className="skills-tags">
                 {formData.skillsWanted.map((skill, index) => (
@@ -187,7 +225,6 @@ function UserProfile({ currentUser, setCurrentUser }) {
                     removable={true}
                     onRemove={() => {
                       removeSkillWanted(skill)
-                      setIsEditing(true)
                     }}
                   />
                 ))}
@@ -202,16 +239,12 @@ function UserProfile({ currentUser, setCurrentUser }) {
                   onKeyPress={(e) => {
                     if (e.key === 'Enter') {
                       addSkillWanted()
-                      setIsEditing(true)
                     }
                   }}
                 />
                 <button 
                   className="add-skill-btn"
-                  onClick={() => {
-                    addSkillWanted()
-                    setIsEditing(true)
-                  }}
+                  onClick={addSkillWanted}
                 >
                   +
                 </button>
