@@ -49,7 +49,8 @@ SkillSwap is a community-driven platform where users can offer their skills and 
 
 ## 🛠️ Tech Stack
 
-- **Backend**: Python
+- **Backend**: Node.js with Express
+- **Frontend**: React.js
 - **Database**: [Your choice]
 - **Frontend**: [Your choice]
 
