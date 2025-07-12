@@ -1,55 +1,33 @@
 import { useState } from 'react'
 import SkillTag from '../components/SkillTag'
+import { useSkillSwap } from '../contexts/SkillSwapContext'
 
 function UserProfile({ currentUser, setCurrentUser }) {
   const [isEditing, setIsEditing] = useState(false)
+  
+  // Use SkillSwapContext
+  const { 
+    currentUser: contextCurrentUser,
+    updateCurrentUser,
+    getSentRequests,
+    cancelSkillSwapRequest,
+    deleteSkillSwapRequest,
+    formatTimestamp
+  } = useSkillSwap()
+  
   const [formData, setFormData] = useState({
-    name: currentUser.name || 'Current User',
+    name: contextCurrentUser.name || 'Current User',
     location: 'San Francisco, CA',
-    skillsOffered: ['Graphic Design', 'Video Editing', 'Photoshop'],
-    skillsWanted: ['Python', 'Java Script', 'Manager'],
+    skillsOffered: contextCurrentUser.skillsOffered || ['Graphic Design', 'Video Editing', 'Photoshop'],
+    skillsWanted: contextCurrentUser.skillsWanted || ['Python', 'JavaScript', 'Management'],
     availability: 'weekends',
     profileVisibility: 'Public'
   })
   const [newSkillOffered, setNewSkillOffered] = useState('')
   const [newSkillWanted, setNewSkillWanted] = useState('')
 
-  // Mock data for user's sent requests
-  const [myRequests] = useState([
-    {
-      id: 1,
-      targetUser: 'Marc Demo',
-      targetAvatar: 'https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&dpr=1',
-      offeredSkill: 'Graphic Design',
-      wantedSkill: 'Python',
-      message: 'Hi Marc! I\'d love to exchange my graphic design skills for your Python expertise. I have 5 years of experience in design.',
-      status: 'pending',
-      sentDate: '2024-01-15',
-      timestamp: '2 days ago'
-    },
-    {
-      id: 2,
-      targetUser: 'Joe Wills',
-      targetAvatar: 'https://images.pexels.com/photos/1681010/pexels-photo-1681010.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&dpr=1',
-      offeredSkill: 'Video Editing',
-      wantedSkill: 'Frontend',
-      message: 'Hello Joe! I can help you with video editing in exchange for frontend development knowledge.',
-      status: 'accepted',
-      sentDate: '2024-01-10',
-      timestamp: '1 week ago'
-    },
-    {
-      id: 3,
-      targetUser: 'Sarah Chen',
-      targetAvatar: 'https://images.pexels.com/photos/733872/pexels-photo-733872.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&dpr=1',
-      offeredSkill: 'Photoshop',
-      wantedSkill: 'Manager',
-      message: 'Hi Sarah! I\'d like to learn management skills and can offer my Photoshop expertise in return.',
-      status: 'declined',
-      sentDate: '2024-01-05',
-      timestamp: '2 weeks ago'
-    }
-  ])
+  // Get user's sent requests from context
+  const myRequests = getSentRequests()
   const handleInputChange = (field, value) => {
     setFormData(prev => ({
       ...prev,
@@ -91,13 +69,45 @@ function UserProfile({ currentUser, setCurrentUser }) {
     }))
   }
 
-  const handleSave = () => {
-    setCurrentUser(prev => ({
-      ...prev,
-      name: formData.name
-    }))
-    setIsEditing(false)
-    // Here you would typically save to backend
+  const handleSave = async () => {
+    try {
+      // Update current user in context
+      await updateCurrentUser({
+        name: formData.name,
+        skillsOffered: formData.skillsOffered,
+        skillsWanted: formData.skillsWanted,
+        location: formData.location,
+        availability: formData.availability,
+        profileVisibility: formData.profileVisibility
+      })
+      
+      // Also update the prop for backward compatibility
+      setCurrentUser(prev => ({
+        ...prev,
+        name: formData.name
+      }))
+      
+      setIsEditing(false)
+    } catch (error) {
+      console.error('Error saving profile:', error)
+      // You could add a notification system here
+    }
+  }
+
+  const handleCancelRequest = async (requestId) => {
+    try {
+      await cancelSkillSwapRequest(requestId)
+    } catch (error) {
+      console.error('Error cancelling request:', error)
+    }
+  }
+
+  const handleDeleteRequest = async (requestId) => {
+    try {
+      await deleteSkillSwapRequest(requestId)
+    } catch (error) {
+      console.error('Error deleting request:', error)
+    }
   }
 
   const handleDiscard = () => {
@@ -192,7 +202,7 @@ function UserProfile({ currentUser, setCurrentUser }) {
                   value={newSkillOffered}
                   onChange={(e) => setNewSkillOffered(e.target.value)}
                   placeholder="Add new skill"
-                  onKeyPress={(e) => {
+                  onKeyDown={(e) => {
                     if (e.key === 'Enter') {
                       addSkillOffered()
                       setIsEditing(true)
@@ -235,7 +245,7 @@ function UserProfile({ currentUser, setCurrentUser }) {
                   value={newSkillWanted}
                   onChange={(e) => setNewSkillWanted(e.target.value)}
                   placeholder="Add new skill"
-                  onKeyPress={(e) => {
+                  onKeyDown={(e) => {
                     if (e.key === 'Enter') {
                       addSkillWanted()
                       setIsEditing(true)
@@ -298,10 +308,10 @@ function UserProfile({ currentUser, setCurrentUser }) {
               <div key={request.id} className="request-card">
                 <div className="request-header">
                   <div className="request-user-info">
-                    <img src={request.targetAvatar} alt={request.targetUser} className="request-avatar" />
+                    <img src={request.toUserAvatar} alt={request.toUserName} className="request-avatar" />
                     <div className="request-user-details">
-                      <h3 className="request-user-name">{request.targetUser}</h3>
-                      <span className="request-timestamp">{request.timestamp}</span>
+                      <h3 className="request-user-name">{request.toUserName}</h3>
+                      <span className="request-timestamp">{formatTimestamp(request.createdAt)}</span>
                     </div>
                   </div>
                   <div className={`request-status ${request.status}`}>
@@ -321,15 +331,28 @@ function UserProfile({ currentUser, setCurrentUser }) {
                 
                 <div className="request-message">
                   <span className="message-label">Message:</span>
-                  <p className="message-text">{request.message}</p>
+                  <p className="message-text">{request.message || 'No message provided'}</p>
                 </div>
                 
                 <div className="request-actions">
                   {request.status === 'pending' && (
-                    <button className="cancel-request-btn">Cancel Request</button>
+                    <button 
+                      className="cancel-request-btn"
+                      onClick={() => handleCancelRequest(request.id)}
+                    >
+                      Cancel Request
+                    </button>
                   )}
                   {request.status === 'accepted' && (
                     <button className="contact-btn">Contact User</button>
+                  )}
+                  {(request.status === 'rejected' || request.status === 'cancelled') && (
+                    <button 
+                      className="cancel-request-btn"
+                      onClick={() => handleDeleteRequest(request.id)}
+                    >
+                      Remove
+                    </button>
                   )}
                 </div>
               </div>

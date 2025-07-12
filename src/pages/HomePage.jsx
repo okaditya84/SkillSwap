@@ -2,6 +2,7 @@ import { useState } from 'react';
 import UserCard from '../components/UserCard';
 import LoginPopup from '../components/LoginPopup';
 import { useNavigate } from 'react-router-dom';
+import { useSkillSwap } from '../contexts/SkillSwapContext';
 
 function HomePage({ isLoggedIn, setIsLoggedIn }) {
   const [searchTerm, setSearchTerm] = useState('');
@@ -9,39 +10,14 @@ function HomePage({ isLoggedIn, setIsLoggedIn }) {
   const [currentPage, setCurrentPage] = useState(1);
   const [showLoginPopup, setShowLoginPopup] = useState(false);
   const navigate = useNavigate();
-
-  const users = [
-    {
-      id: 1,
-      name: 'Marc Demo',
-      avatar: 'https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&dpr=1',
-      skillsOffered: ['Java Script', 'Python'],
-      skillsWanted: ['Database', 'Graphic Designer'],
-      rating: 3.9,
-      profileVisibility: 'Public',
-      requestStatus: null
-    },
-    {
-      id: 2,
-      name: 'Michell',
-      avatar: 'https://images.pexels.com/photos/733872/pexels-photo-733872.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&dpr=1',
-      skillsOffered: ['Java Script', 'Python'],
-      skillsWanted: ['Database', 'Graphic Designer'],
-      rating: 2.5,
-      profileVisibility: 'Private',
-      requestStatus: 'pending'
-    },
-    {
-      id: 3,
-      name: 'Joe wills',
-      avatar: 'https://images.pexels.com/photos/1681010/pexels-photo-1681010.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&dpr=1',
-      skillsOffered: ['Java Script', 'Python'],
-      skillsWanted: ['Database', 'Graphic Designer'],
-      rating: 4.0,
-      profileVisibility: 'Public',
-      requestStatus: 'accepted'
-    }
-  ];
+  
+  // Use SkillSwapContext
+  const { 
+    getUsersWithRequestStatus, 
+    getUsersByRequestStatus,
+    acceptSkillSwapRequest, 
+    rejectSkillSwapRequest 
+  } = useSkillSwap();
 
   const usersPerPage = 3;
   
@@ -76,16 +52,11 @@ function HomePage({ isLoggedIn, setIsLoggedIn }) {
 
   // Filter users based on availability and search
   const filteredUsers = (() => {
-    // First filter by availability
-    let availabilityFiltered = users.filter(user => {
-      if (availability === 'All') return user.requestStatus === null;
-      if (availability === 'Pending') return user.requestStatus === 'pending';
-      if (availability === 'Accepted') return user.requestStatus === 'accepted';
-      return true; // For other availability options like Weekdays, Weekends, etc.
-    });
-
+    // Get users with their request status from context
+    const usersWithStatus = getUsersByRequestStatus(availability);
+    
     // Then apply search filter
-    return searchUsers(availabilityFiltered, searchTerm);
+    return searchUsers(usersWithStatus, searchTerm);
   })();
 
   const totalPages = Math.ceil(filteredUsers.length / usersPerPage);
@@ -121,12 +92,32 @@ function HomePage({ isLoggedIn, setIsLoggedIn }) {
     }
   };
 
-  const handleAcceptRequest = (userId) => {
-    console.log(`Accepting request from user ${userId}`);
+  const handleAcceptRequest = async (userId) => {
+    try {
+      // Find the pending request for this user
+      const usersWithStatus = getUsersWithRequestStatus();
+      const targetUser = usersWithStatus.find(user => user.id === userId);
+      
+      if (targetUser && targetUser.request) {
+        await acceptSkillSwapRequest(targetUser.request.id);
+      }
+    } catch (error) {
+      console.error('Error accepting request:', error)
+    }
   };
 
-  const handleRejectRequest = (userId) => {
-    console.log(`Rejecting request from user ${userId}`);
+  const handleRejectRequest = async (userId) => {
+    try {
+      // Find the pending request for this user
+      const usersWithStatus = getUsersWithRequestStatus();
+      const targetUser = usersWithStatus.find(user => user.id === userId);
+      
+      if (targetUser && targetUser.request) {
+        await rejectSkillSwapRequest(targetUser.request.id);
+      }
+    } catch (error) {
+      console.error('Error rejecting request:', error)
+    }
   };
 
   const renderPagination = () => {

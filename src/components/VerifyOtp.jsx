@@ -1,25 +1,36 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import skillSwapService from '../services/skillSwapService';
 
 const VerifyOtp = ({ setIsLoggedIn }) => {
     const { userId } = useParams();
     const [otp, setOtp] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
     const navigate = useNavigate();
 
     const handleVerify = async (e) => {
         e.preventDefault();
+        
+        if (!otp || otp.length < 4) {
+            alert('Please enter a valid OTP');
+            return;
+        }
+        
+        setIsLoading(true);
+        
         try {
-            const res = await axios.post('https://odoo-begin.onrender.com/api/auth/verify-otp', {
-                userId,
-                otp,
-            });
-            alert(res.data.message);
-            localStorage.setItem('token', res.data.token);
+            const result = await skillSwapService.verifyOTP(userId, otp);
+            alert(result.message);
+            
+            localStorage.setItem('skillSwap_token', result.token);
+            localStorage.setItem('skillSwap_currentUser', JSON.stringify(result.user));
+            
             setIsLoggedIn(true); // Set logged in state to true after successful verification
             navigate('/'); // Redirect to home page after login
         } catch (err) {
-            alert(err.response?.data?.message || 'OTP verification failed');
+            alert('OTP verification failed: ' + err.message);
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -49,8 +60,16 @@ const VerifyOtp = ({ setIsLoggedIn }) => {
                         <button
                             type="submit"
                             className="auth-btn auth-btn-register"
+                            disabled={isLoading}
                         >
-                            <span>Verify Account</span>
+                            {isLoading ? (
+                                <>
+                                    <div className="btn-spinner"></div>
+                                    <span>Verifying...</span>
+                                </>
+                            ) : (
+                                <span>Verify Account</span>
+                            )}
                         </button>
                     </form>
                 </div>

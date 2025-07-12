@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react'
-import { useParams, Navigate } from 'react-router-dom'
+import { useParams } from 'react-router-dom'
 import SkillTag from '../components/SkillTag'
 import LoginPopup from '../components/LoginPopup'
 import SkillSwapRequestPopup from '../components/SkillSwapRequestPopup'
 import NotificationBlock from '../components/NotificationBlock'
+import { useSkillSwap } from '../contexts/SkillSwapContext'
 
 function DetailedView({ isLoggedIn, setIsLoggedIn }) {
   const { id } = useParams()
@@ -13,75 +14,61 @@ function DetailedView({ isLoggedIn, setIsLoggedIn }) {
   const [loading, setLoading] = useState(true)
   const [notification, setNotification] = useState(null)
 
-  // Mock current user data - in real app this would come from context/state
-  const currentUser = {
-    id: 1,
-    name: 'Current User',
-    skillsOffered: ['Graphic Design', 'Video Editing', 'Photoshop'],
-    skillsWanted: ['Python', 'Java Script', 'Manager']
-  }
-
-  // Mock user data - in real app this would come from API
-  const users = [
-    {
-      id: 1,
-      name: 'Marc Demo',
-      avatar: 'https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=200&h=200&dpr=1',
-      skillsOffered: ['Java Script', 'Python', 'React'],
-      skillsWanted: ['Database', 'Graphic Designer', 'UI/UX'],
-      rating: 3.9,
-      profileVisibility: 'Public',
-      location: 'San Francisco, CA',
-      availability: 'Weekends'
-    },
-    {
-      id: 2,
-      name: 'Michell',
-      avatar: 'https://images.pexels.com/photos/733872/pexels-photo-733872.jpeg?auto=compress&cs=tinysrgb&w=200&h=200&dpr=1',
-      skillsOffered: ['Graphic Design', 'Photoshop'],
-      skillsWanted: ['Web Development', 'Marketing'],
-      rating: 2.5,
-      profileVisibility: 'Private',
-      location: 'New York, NY',
-      availability: 'Evenings'
-    },
-    {
-      id: 3,
-      name: 'Joe Wills',
-      avatar: 'https://images.pexels.com/photos/1681010/pexels-photo-1681010.jpeg?auto=compress&cs=tinysrgb&w=200&h=200&dpr=1',
-      skillsOffered: ['Node.js', 'MongoDB'],
-      skillsWanted: ['Frontend', 'Design'],
-      rating: 4.0,
-      profileVisibility: 'Public',
-      location: 'Austin, TX',
-      availability: 'Flexible'
-    }
-  ]
+  // Use SkillSwapContext
+  const { 
+    currentUser, 
+    getUserById, 
+    sendSkillSwapRequest,
+    hasExistingRequest,
+    getRequestStatus 
+  } = useSkillSwap()
 
   useEffect(() => {
-    // Simulate API call
-    setTimeout(() => {
-      const foundUser = users.find(u => u.id === parseInt(id))
-      setUser(foundUser)
-      setLoading(false)
-    }, 500)
-  }, [id])
+    // Get user from context
+    const foundUser = getUserById(parseInt(id))
+    setUser(foundUser)
+    setLoading(false)
+  }, [id, getUserById])
 
   const handleRequestClick = () => {
     if (!isLoggedIn) {
       setShowLoginPopup(true)
     } else {
-      setShowSkillSwapPopup(true)
+      // Check if request already exists
+      const existingRequest = hasExistingRequest(parseInt(id))
+      if (existingRequest) {
+        setNotification({
+          message: `You already have a pending request with ${user.name}`,
+          type: 'info'
+        })
+      } else {
+        setShowSkillSwapPopup(true)
+      }
     }
   }
 
-  const handleSkillSwapSubmit = (requestData) => {
-    console.log('Skill swap request:', requestData)
-    setNotification({
-      message: `Skill swap request sent to ${user.name}! Your ${requestData.offeredSkill} for their ${requestData.wantedSkill}`,
-      type: 'success'
-    })
-    setShowSkillSwapPopup(false)
+  const handleSkillSwapSubmit = async (requestData) => {
+    try {
+      const newRequest = await sendSkillSwapRequest({
+        toUserId: user.id,
+        toUserName: user.name,
+        toUserAvatar: user.avatar,
+        offeredSkill: requestData.offeredSkill,
+        wantedSkill: requestData.wantedSkill,
+        message: requestData.message
+      })
+
+      setNotification({
+        message: `Skill swap request sent to ${user.name}! Your ${requestData.offeredSkill} for their ${requestData.wantedSkill}`,
+        type: 'success'
+      })
+      setShowSkillSwapPopup(false)
+    } catch (error) {
+      setNotification({
+        message: error.message || 'Failed to send skill swap request. Please try again.',
+        type: 'error'
+      })
+    }
   }
 
   if (loading) {

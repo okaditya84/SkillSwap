@@ -60,5 +60,13 @@ function Header({ isLoggedIn, currentUser, setIsLoggedIn }) {
     </header>
   )
 }
+              Login
+            </button>
+          )}
+        </nav>
+      </div>
+    </header>
+  )
+}
 
 export default Header
