@@ -1,43 +1,60 @@
-import { useState, useRef } from 'react'
+import { useState } from 'react'
 import SkillTag from '../components/SkillTag'
 
 function UserProfile({ currentUser, setCurrentUser }) {
   const [isEditing, setIsEditing] = useState(false)
-  const fileInputRef = useRef(null)
-
   const [formData, setFormData] = useState({
     name: currentUser.name || 'Current User',
     location: 'San Francisco, CA',
     skillsOffered: ['Graphic Design', 'Video Editing', 'Photoshop'],
     skillsWanted: ['Python', 'Java Script', 'Manager'],
     availability: 'weekends',
-    profileVisibility: 'Public',
-    profilePhoto: currentUser.avatar || '',
+    profileVisibility: 'Public'
   })
-
   const [newSkillOffered, setNewSkillOffered] = useState('')
   const [newSkillWanted, setNewSkillWanted] = useState('')
 
+  // Mock data for user's sent requests
+  const [myRequests] = useState([
+    {
+      id: 1,
+      targetUser: 'Marc Demo',
+      targetAvatar: 'https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&dpr=1',
+      offeredSkill: 'Graphic Design',
+      wantedSkill: 'Python',
+      message: 'Hi Marc! I\'d love to exchange my graphic design skills for your Python expertise. I have 5 years of experience in design.',
+      status: 'pending',
+      sentDate: '2024-01-15',
+      timestamp: '2 days ago'
+    },
+    {
+      id: 2,
+      targetUser: 'Joe Wills',
+      targetAvatar: 'https://images.pexels.com/photos/1681010/pexels-photo-1681010.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&dpr=1',
+      offeredSkill: 'Video Editing',
+      wantedSkill: 'Frontend',
+      message: 'Hello Joe! I can help you with video editing in exchange for frontend development knowledge.',
+      status: 'accepted',
+      sentDate: '2024-01-10',
+      timestamp: '1 week ago'
+    },
+    {
+      id: 3,
+      targetUser: 'Sarah Chen',
+      targetAvatar: 'https://images.pexels.com/photos/733872/pexels-photo-733872.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&dpr=1',
+      offeredSkill: 'Photoshop',
+      wantedSkill: 'Manager',
+      message: 'Hi Sarah! I\'d like to learn management skills and can offer my Photoshop expertise in return.',
+      status: 'declined',
+      sentDate: '2024-01-05',
+      timestamp: '2 weeks ago'
+    }
+  ])
   const handleInputChange = (field, value) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
     }))
-  }
-
-  const handlePhotoChange = (e) => {
-    const file = e.target.files[0]
-    if (file) {
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        setFormData(prev => ({
-          ...prev,
-          profilePhoto: reader.result
-        }))
-        setIsEditing(true)
-      }
-      reader.readAsDataURL(file)
-    }
   }
 
   const addSkillOffered = () => {
@@ -47,7 +64,6 @@ function UserProfile({ currentUser, setCurrentUser }) {
         skillsOffered: [...prev.skillsOffered, newSkillOffered.trim()]
       }))
       setNewSkillOffered('')
-      setIsEditing(true)
     }
   }
 
@@ -58,7 +74,6 @@ function UserProfile({ currentUser, setCurrentUser }) {
         skillsWanted: [...prev.skillsWanted, newSkillWanted.trim()]
       }))
       setNewSkillWanted('')
-      setIsEditing(true)
     }
   }
 
@@ -67,7 +82,6 @@ function UserProfile({ currentUser, setCurrentUser }) {
       ...prev,
       skillsOffered: prev.skillsOffered.filter(skill => skill !== skillToRemove)
     }))
-    setIsEditing(true)
   }
 
   const removeSkillWanted = (skillToRemove) => {
@@ -75,14 +89,12 @@ function UserProfile({ currentUser, setCurrentUser }) {
       ...prev,
       skillsWanted: prev.skillsWanted.filter(skill => skill !== skillToRemove)
     }))
-    setIsEditing(true)
   }
 
   const handleSave = () => {
     setCurrentUser(prev => ({
       ...prev,
-      name: formData.name,
-      avatar: formData.profilePhoto
+      name: formData.name
     }))
     setIsEditing(false)
     // Here you would typically save to backend
@@ -95,8 +107,7 @@ function UserProfile({ currentUser, setCurrentUser }) {
       skillsOffered: ['Graphic Design', 'Video Editing', 'Photoshop'],
       skillsWanted: ['Python', 'Java Script', 'Manager'],
       availability: 'weekends',
-      profileVisibility: 'Public',
-      profilePhoto: currentUser.avatar || '',
+      profileVisibility: 'Public'
     })
     setIsEditing(false)
   }
@@ -121,27 +132,9 @@ function UserProfile({ currentUser, setCurrentUser }) {
         
         <div className="profile-photo-section">
           <div className="profile-photo-container">
-            <img
-              src={formData.profilePhoto || currentUser.avatar}
-              alt="Profile"
-              className="profile-photo"
-            />
+            <img src={currentUser.avatar} alt="Profile" className="profile-photo" />
             <div className="profile-photo-label">Profile Photo</div>
-
-            <input
-              type="file"
-              accept="image/*"
-              style={{ display: 'none' }}
-              ref={fileInputRef}
-              onChange={handlePhotoChange}
-            />
-
-            <button
-              className="edit-photo-btn"
-              onClick={() => fileInputRef.current && fileInputRef.current.click()}
-            >
-              Add/Edit Photo
-            </button>
+            <button className="edit-photo-btn">Add/Edit Remove</button>
           </div>
         </div>
       </div>
@@ -187,6 +180,7 @@ function UserProfile({ currentUser, setCurrentUser }) {
                     removable={true}
                     onRemove={() => {
                       removeSkillOffered(skill)
+                      setIsEditing(true)
                     }}
                   />
                 ))}
@@ -201,12 +195,16 @@ function UserProfile({ currentUser, setCurrentUser }) {
                   onKeyPress={(e) => {
                     if (e.key === 'Enter') {
                       addSkillOffered()
+                      setIsEditing(true)
                     }
                   }}
                 />
                 <button 
                   className="add-skill-btn"
-                  onClick={addSkillOffered}
+                  onClick={() => {
+                    addSkillOffered()
+                    setIsEditing(true)
+                  }}
                 >
                   +
                 </button>
@@ -215,7 +213,7 @@ function UserProfile({ currentUser, setCurrentUser }) {
           </div>
 
           <div className="skills-section">
-            <label className="form-label">Skills Wanted</label>
+            <label className="form-label">Skills wanted</label>
             <div className="skills-container">
               <div className="skills-tags">
                 {formData.skillsWanted.map((skill, index) => (
@@ -225,6 +223,7 @@ function UserProfile({ currentUser, setCurrentUser }) {
                     removable={true}
                     onRemove={() => {
                       removeSkillWanted(skill)
+                      setIsEditing(true)
                     }}
                   />
                 ))}
@@ -239,12 +238,16 @@ function UserProfile({ currentUser, setCurrentUser }) {
                   onKeyPress={(e) => {
                     if (e.key === 'Enter') {
                       addSkillWanted()
+                      setIsEditing(true)
                     }
                   }}
                 />
                 <button 
                   className="add-skill-btn"
-                  onClick={addSkillWanted}
+                  onClick={() => {
+                    addSkillWanted()
+                    setIsEditing(true)
+                  }}
                 >
                   +
                 </button>
@@ -284,6 +287,59 @@ function UserProfile({ currentUser, setCurrentUser }) {
             <option value="Private">Private</option>
             <option value="Friends Only">Friends Only</option>
           </select>
+        </div>
+      </div>
+
+      <div className="my-requests-section">
+        <h2 className="section-title">My Requests</h2>
+        <div className="requests-list">
+          {myRequests.length > 0 ? (
+            myRequests.map(request => (
+              <div key={request.id} className="request-card">
+                <div className="request-header">
+                  <div className="request-user-info">
+                    <img src={request.targetAvatar} alt={request.targetUser} className="request-avatar" />
+                    <div className="request-user-details">
+                      <h3 className="request-user-name">{request.targetUser}</h3>
+                      <span className="request-timestamp">{request.timestamp}</span>
+                    </div>
+                  </div>
+                  <div className={`request-status ${request.status}`}>
+                    {request.status.charAt(0).toUpperCase() + request.status.slice(1)}
+                  </div>
+                </div>
+                
+                <div className="request-skills">
+                  <div className="skill-exchange">
+                    <span className="skill-label">Your Skill:</span>
+                    <SkillTag skill={request.offeredSkill} />
+                    <span className="exchange-arrow">⇄</span>
+                    <span className="skill-label">Their Skill:</span>
+                    <SkillTag skill={request.wantedSkill} />
+                  </div>
+                </div>
+                
+                <div className="request-message">
+                  <span className="message-label">Message:</span>
+                  <p className="message-text">{request.message}</p>
+                </div>
+                
+                <div className="request-actions">
+                  {request.status === 'pending' && (
+                    <button className="cancel-request-btn">Cancel Request</button>
+                  )}
+                  {request.status === 'accepted' && (
+                    <button className="contact-btn">Contact User</button>
+                  )}
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="no-requests">
+              <p>You haven't sent any skill swap requests yet.</p>
+              <p>Browse users and start exchanging skills!</p>
+            </div>
+          )}
         </div>
       </div>
     </div>

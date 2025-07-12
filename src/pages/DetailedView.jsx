@@ -2,13 +2,26 @@ import { useState, useEffect } from 'react'
 import { useParams, Navigate } from 'react-router-dom'
 import SkillTag from '../components/SkillTag'
 import LoginPopup from '../components/LoginPopup'
+import SkillSwapRequestPopup from '../components/SkillSwapRequestPopup'
+import NotificationBlock from '../components/NotificationBlock'
 
 function DetailedView({ isLoggedIn, setIsLoggedIn }) {
   const { id } = useParams()
   const [user, setUser] = useState(null)
   const [showLoginPopup, setShowLoginPopup] = useState(false)
+  const [showSkillSwapPopup, setShowSkillSwapPopup] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [notification, setNotification] = useState(null)
 
+  // Mock current user data - in real app this would come from context/state
+  const currentUser = {
+    id: 1,
+    name: 'Current User',
+    skillsOffered: ['Graphic Design', 'Video Editing', 'Photoshop'],
+    skillsWanted: ['Python', 'Java Script', 'Manager']
+  }
+
+  // Mock user data - in real app this would come from API
   const users = [
     {
       id: 1,
@@ -58,9 +71,17 @@ function DetailedView({ isLoggedIn, setIsLoggedIn }) {
     if (!isLoggedIn) {
       setShowLoginPopup(true)
     } else {
-      // Handle skill swap request
-      alert('Skill swap request sent!')
+      setShowSkillSwapPopup(true)
     }
+  }
+
+  const handleSkillSwapSubmit = (requestData) => {
+    console.log('Skill swap request:', requestData)
+    setNotification({
+      message: `Skill swap request sent to ${user.name}! Your ${requestData.offeredSkill} for their ${requestData.wantedSkill}`,
+      type: 'success'
+    })
+    setShowSkillSwapPopup(false)
   }
 
   if (loading) {
@@ -180,6 +201,23 @@ function DetailedView({ isLoggedIn, setIsLoggedIn }) {
             setIsLoggedIn(true);
             setShowLoginPopup(false);
           }}
+        />
+      )}
+
+      {showSkillSwapPopup && (
+        <SkillSwapRequestPopup 
+          onClose={() => setShowSkillSwapPopup(false)}
+          onSubmit={handleSkillSwapSubmit}
+          currentUser={currentUser}
+          targetUser={user}
+        />
+      )}
+
+      {notification && (
+        <NotificationBlock 
+          message={notification.message}
+          type={notification.type}
+          onClose={() => setNotification(null)}
         />
       )}
     </div>
