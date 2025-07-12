@@ -35,9 +35,9 @@ function Header({ isLoggedIn, currentUser, setIsLoggedIn }) {
                 Home
               </Link>
               
-              <div className="user-avatar">
+              <Link to="/profile" className="user-avatar">
                 <img src={currentUser.avatar} alt="Profile" />
-              </div>
+              </Link>
               
               <button className="logout-btn" onClick={handleLogout}>
                 Logout
