@@ -16,7 +16,8 @@ function HomePage({ isLoggedIn, setIsLoggedIn }) {
       skillsOffered: ['Java Script', 'Python'],
       skillsWanted: ['Database', 'Graphic Designer'],
       rating: 3.9,
-      profileVisibility: 'Public'
+      profileVisibility: 'Public',
+      requestStatus: null // null for regular users, 'pending' or 'accepted' for requests
     },
     {
       id: 2,
@@ -25,7 +26,8 @@ function HomePage({ isLoggedIn, setIsLoggedIn }) {
       skillsOffered: ['Java Script', 'Python'],
       skillsWanted: ['Database', 'Graphic Designer'],
       rating: 2.5,
-      profileVisibility: 'Private'
+      profileVisibility: 'Private',
+      requestStatus: 'pending'
     },
     {
       id: 3,
@@ -34,12 +36,22 @@ function HomePage({ isLoggedIn, setIsLoggedIn }) {
       skillsOffered: ['Java Script', 'Python'],
       skillsWanted: ['Database', 'Graphic Designer'],
       rating: 4.0,
-      profileVisibility: 'Public'
+      profileVisibility: 'Public',
+      requestStatus: 'accepted'
     }
   ];
 
   const usersPerPage = 3;
-  const totalPages = Math.ceil(users.length / usersPerPage);
+  
+  // Filter users based on availability selection
+  const filteredUsers = users.filter(user => {
+    if (availability === 'All') return user.requestStatus === null;
+    if (availability === 'Pending') return user.requestStatus === 'pending';
+    if (availability === 'Accepted') return user.requestStatus === 'accepted';
+    return true; // For other availability options like Weekdays, Weekends, etc.
+  });
+
+  const totalPages = Math.ceil(filteredUsers.length / usersPerPage);
 
   const handlePageChange = (page) => {
     if (page < 1 || page > totalPages) return;
@@ -50,6 +62,18 @@ function HomePage({ isLoggedIn, setIsLoggedIn }) {
     if (!isLoggedIn) {
       setShowLoginPopup(true);
     }
+  };
+
+  const handleAcceptRequest = (userId) => {
+    // Handle accept request logic here
+    console.log(`Accepting request from user ${userId}`);
+    // You would typically make an API call here
+  };
+
+  const handleRejectRequest = (userId) => {
+    // Handle reject request logic here
+    console.log(`Rejecting request from user ${userId}`);
+    // You would typically make an API call here
   };
 
   const renderPagination = () => {
@@ -68,7 +92,7 @@ function HomePage({ isLoggedIn, setIsLoggedIn }) {
     return pages;
   };
 
-  const paginatedUsers = users.slice(
+  const paginatedUsers = filteredUsers.slice(
     (currentPage - 1) * usersPerPage,
     currentPage * usersPerPage
   );
@@ -87,7 +111,9 @@ function HomePage({ isLoggedIn, setIsLoggedIn }) {
             value={availability}
             onChange={(e) => setAvailability(e.target.value)}
           >
-            <option value="All">Availability</option>
+            <option value="All">All Users</option>
+            <option value="Pending">Pending Requests</option>
+            <option value="Accepted">Accepted Requests</option>
             <option value="Weekdays">Weekdays</option>
             <option value="Weekends">Weekends</option>
             <option value="Evenings">Evenings</option>
@@ -113,27 +139,38 @@ function HomePage({ isLoggedIn, setIsLoggedIn }) {
             user={user} 
             isLoggedIn={isLoggedIn}
             onRequestClick={handleRequestClick}
+            onAcceptRequest={handleAcceptRequest}
+            onRejectRequest={handleRejectRequest}
+            viewMode={availability}
           />
         ))}
       </div>
 
-      <div className="pagination">
-        <button
-          className="pagination-btn"
-          disabled={currentPage === 1}
-          onClick={() => handlePageChange(currentPage - 1)}
-        >
-          ‹
-        </button>
-        {renderPagination()}
-        <button
-          className="pagination-btn"
-          disabled={currentPage === totalPages}
-          onClick={() => handlePageChange(currentPage + 1)}
-        >
-          ›
-        </button>
-      </div>
+      {filteredUsers.length === 0 && (
+        <div className="no-results">
+          <p>No {availability.toLowerCase()} requests found.</p>
+        </div>
+      )}
+
+      {totalPages > 1 && (
+        <div className="pagination">
+          <button
+            className="pagination-btn"
+            disabled={currentPage === 1}
+            onClick={() => handlePageChange(currentPage - 1)}
+          >
+            ‹
+          </button>
+          {renderPagination()}
+          <button
+            className="pagination-btn"
+            disabled={currentPage === totalPages}
+            onClick={() => handlePageChange(currentPage + 1)}
+          >
+            ›
+          </button>
+        </div>
+      )}
 
       {showLoginPopup && (
         <LoginPopup 
